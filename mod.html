@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Spread — Mod Console (Test)</title>
+  <style>
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 400;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f58724915f95c9f19446ce_Matter-Regular.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 500;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f587242130ef3148ea1960_Matter-Medium.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 600;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f587240b37191d663564ad_Matter-SemiBold.ttf') format('truetype');
+    }
+
+    :root {
+      --ink: #121926;
+      --orange: #FF6200;
+      --butter: #FFC629;
+      --cream: #FFFDF7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Matter', Arial, sans-serif;
+      color: var(--ink);
+      background: var(--cream);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--ink);
+      color: #fff;
+      padding: 14px 24px;
+    }
+    header h1 { font-size: 16px; font-weight: 500; letter-spacing: 0.18em; }
+    header .who {
+      font-size: 13px;
+      background: #fff;
+      color: var(--ink);
+      padding: 5px 12px;
+      font-weight: 500;
+    }
+    header .who.warn { background: var(--butter); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 360px;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 24px;
+      align-items: start;
+    }
+    .box {
+      border: 2.5px solid var(--ink);
+      box-shadow: 8px 8px 0 var(--ink);
+      background: #fff;
+    }
+    .box-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 2.5px solid var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+    }
+    .box-head.q { background: var(--butter); }
+    .box-head.f { background: var(--cream); }
+    .count {
+      font-size: 12px;
+      background: var(--ink);
+      color: #fff;
+      padding: 2px 8px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+    ul { list-style: none; max-height: 72vh; overflow-y: auto; }
+    .empty { padding: 18px 14px; color: rgba(18,25,38,0.4); font-size: 14px; }
+    li.msg {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(18,25,38,0.08);
+      font-size: 14px;
+    }
+    li.msg .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    li.msg .name { font-weight: 600; }
+    li.msg .time { font-size: 11px; color: rgba(18,25,38,0.4); white-space: nowrap; }
+    li.msg .text { margin: 4px 0 8px; word-break: break-word; }
+    li.msg .text img { max-width: 120px; display: block; }
+    li.msg.surfaced { background: #FFF3CC; }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .actions button {
+      font-family: 'Matter', Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      border: 2px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      padding: 3px 10px;
+      cursor: pointer;
+    }
+    .actions button:hover { background: var(--cream); }
+    .actions button.primary { background: var(--ink); color: var(--butter); }
+    .actions button.danger:hover { background: #FFE1E1; }
+
+    .chat-fill { position: relative; height: 70vh; }
+    .chat-fill .minnit-chat-sembed { display: block; height: 100%; }
+    .chat-fill iframe {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      border: none;
+      display: block;
+    }
+    .note {
+      max-width: 1400px;
+      margin: 0 auto 32px;
+      padding: 0 24px;
+      font-size: 13px;
+      color: rgba(18,25,38,0.55);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧈 THE SPREAD — MOD CONSOLE</h1>
+    <span class="who" id="who">connecting…</span>
+  </header>
+
+  <div class="grid">
+    <div class="box">
+      <div class="box-head q"><span>🙋 QUESTION QUEUE</span><span class="count" id="q-count">0</span></div>
+      <ul id="q-list"><li class="empty" id="q-empty">Questions from the audience appear here.</li></ul>
+    </div>
+
+    <div class="box">
+      <div class="box-head f"><span>ALL MESSAGES</span><span class="count" id="f-count">0</span></div>
+      <ul id="f-list"><li class="empty" id="f-empty">Live message feed.</li></ul>
+    </div>
+
+    <div class="box chat-box">
+      <div class="box-head f"><span>CHAT (LOG IN AS MOD HERE)</span></div>
+      <!-- Minnit SDK-enabled embed -->
+      <script src="https://minnit.chat/js/chatsdk.js?c=1772345196" defer></script>
+      <div class="chat-fill">
+        <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modchat" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed&sdk&sdkversion=1.1" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+        <script>
+          // Mod access: open this page as mod.html?staffkey=YOUR_KEY and the key is
+          // forwarded into the chat embed URL (Minnit Staff Keys, Chat Settings → Staff Keys).
+          // The key is never stored in this page's source. Runs during parse, before the
+          // deferred embed.js reads the span.
+          (function () {
+            const key = new URLSearchParams(location.search).get('staffkey');
+            if (key && /^[A-Za-z0-9_-]{1,128}$/.test(key)) {
+              const span = document.querySelector('.minnit-chat-sembed');
+              span.dataset.chatname += '&staffkey=' + encodeURIComponent(key);
+            }
+          })();
+        </script>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">
+    Moderation buttons call the Minnit SDK (deleteMessage / kickUser / banUser). They only take effect when the
+    session logged into the chat panel on the right has <strong>moderator rank or higher</strong> in this Minnit room —
+    otherwise Minnit ignores them server-side. “Surface” is our own layer (highlights here; in production it would
+    push to a stream overlay or the event page).
+  </p>
+
+  <script>
+    let minnit;
+    const seen = new Set();
+    let qCount = 0, fCount = 0;
+
+    function esc(el, text) { el.textContent = text; return el; }
+
+    function fmtTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts * 1000);
+      return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function makeItem(m, isQuestion) {
+      const li = document.createElement('li');
+      li.className = 'msg';
+      const top = document.createElement('div');
+      top.className = 'top';
+      top.append(
+        esc(Object.assign(document.createElement('span'), { className: 'name' }), m.nickname || m.username || 'Anonymous'),
+        esc(Object.assign(document.createElement('span'), { className: 'time' }), fmtTime(m.timestamp))
+      );
+      const text = Object.assign(document.createElement('div'), { className: 'text' });
+      let body = m.message ?? m.msg ?? m.text ?? '';
+      esc(text, isQuestion ? body.replace(/^Q:\s*/i, '') : body);
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      if (isQuestion) {
+        const surface = esc(document.createElement('button'), 'SURFACE');
+        surface.className = 'primary';
+        surface.addEventListener('click', () => {
+          li.classList.toggle('surfaced');
+          surface.textContent = li.classList.contains('surfaced') ? 'SURFACED ✓' : 'SURFACE';
+        });
+        actions.append(surface);
+      }
+
+      const del = esc(document.createElement('button'), 'DELETE');
+      del.className = 'danger';
+      del.addEventListener('click', () => {
+        minnit.deleteMessage({ message_id: m.message_id });
+        li.style.opacity = '0.35';
+      });
+
+      const kick = esc(document.createElement('button'), 'KICK');
+      kick.className = 'danger';
+      kick.addEventListener('click', () => {
+        if (confirm(`Kick ${m.nickname || m.username}?`)) {
+          minnit.kickUser({ userid: m.userid, reason: 'Event moderation' });
+        }
+      });
+
+      const ban = esc(document.createElement('button'), 'BAN 1H');
+      ban.className = 'danger';
+      ban.addEventListener('click', () => {
+        if (confirm(`Ban ${m.nickname || m.username} for 1 hour?`)) {
+          minnit.banUser({ userid: m.userid, duration: 1, reason: 'Event moderation' });
+        }
+      });
+
+      actions.append(del, kick, ban);
+      li.append(top, text, actions);
+      return li;
+    }
+
+    function addMessage(m) {
+      if (!m || !m.message_id || seen.has(m.message_id)) return;
+      seen.add(m.message_id);
+      const body = m.message ?? m.msg ?? m.text ?? '';
+      if (typeof body !== 'string') return;
+
+      const fEmpty = document.getElementById('f-empty');
+      if (fEmpty) fEmpty.remove();
+      document.getElementById('f-list').prepend(makeItem(m, false));
+      document.getElementById('f-count').textContent = ++fCount;
+
+      const isQuestion = /^Q:\s*/i.test(body) || body.includes('?');
+      if (isQuestion) {
+        const qEmpty = document.getElementById('q-empty');
+        if (qEmpty) qEmpty.remove();
+        document.getElementById('q-list').prepend(makeItem(m, true));
+        document.getElementById('q-count').textContent = ++qCount;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const iframe = document.getElementById('modchat');
+      const who = document.getElementById('who');
+      if (!iframe || typeof MinnitChat === 'undefined') {
+        who.textContent = 'SDK failed to initialize';
+        return;
+      }
+      minnit = new MinnitChat({ iframe });
+      minnit.connect();
+
+      minnit.on('connected', (d) => {
+        console.log('MOD SDK connected:', d);
+        const rank = d.rank || 'unknown';
+        who.textContent = `${d.nickname || d.username} — rank: ${rank}`;
+        if (!['moderator', 'manager', 'owner'].includes(rank)) {
+          who.classList.add('warn');
+          who.textContent += ' (log in as a mod for actions to work)';
+        }
+      });
+
+      minnit.on('messageHistory', (d) => (d.messages || []).forEach(addMessage));
+      minnit.on('message', (d) => addMessage(d.message || d));
+    });
+  </script>
+</body>
+</html>

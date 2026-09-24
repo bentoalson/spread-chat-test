@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Spread 2026 — Live (Chat Embed Test)</title>
+  <style>
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 400;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f58724915f95c9f19446ce_Matter-Regular.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 500;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f587242130ef3148ea1960_Matter-Medium.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 600;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f587240b37191d663564ad_Matter-SemiBold.ttf') format('truetype');
+    }
+
+    :root {
+      --ink: #121926;
+      --orange: #FF6200;
+      --butter: #FFC629;
+      --cream: #FFFDF7;
+      --gap: 28px;          /* vertical rhythm: above logo, logo→content */
+      --chat-w: 400px;
+      --col-gap: 92px;      /* player ↔ chat (leaves room for the ruler, per mockup) */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { overflow-x: clip; }
+    body {
+      font-family: 'Matter', Arial, sans-serif;
+      color: var(--ink);
+      /* full-page butter gradient per the event-day design */
+      background: linear-gradient(180deg, #FFC12B 0%, #FFD764 38%, #FFF3D2 78%, #FFFDF7 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ---------- Live indicator ---------- */
+    .hero > .live-pill {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      padding: 8px 16px;
+    }
+    .live-pill .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #FF3B30;
+      animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* ---------- Dimensional slab: bottom face + hatched right face ---------- */
+    .dim {
+      position: relative;
+      border: 1.5px solid var(--ink);
+      background: #fff;
+      --d: 14px; /* extrusion depth */
+      --face: var(--ink); /* bottom-face color; .dim-butter overrides */
+    }
+    .dim-butter { --face: var(--butter); }
+    .dim::before,
+    .dim::after {
+      content: "";
+      position: absolute;
+      box-sizing: border-box;
+    }
+    .dim::before {
+      /* right face — hatched, spans the full outer height, flush with the outer border */
+      left: calc(100% + 1.5px);
+      top: -1.5px;
+      bottom: -1.5px;
+      width: var(--d);
+      /* horizontal stripes pre-skew render as 45° diagonals after skewY(45deg) */
+      background: repeating-linear-gradient(0deg, var(--ink) 0 1.5px, var(--cream) 1.5px 7px);
+      border: 1.5px solid var(--ink);
+      border-left: none; /* shared edge — the panel's own border already draws it */
+      transform: skewY(45deg);
+      transform-origin: top left;
+    }
+    .dim::after {
+      /* bottom face — solid, spans the full outer width, flush with the outer border */
+      top: calc(100% + 1.5px);
+      left: -1.5px;
+      right: -1.5px;
+      height: var(--d);
+      background: var(--face);
+      border: 1.5px solid var(--ink);
+      border-top: none; /* shared edge — the panel's own border already draws it */
+      transform: skewX(45deg);
+      transform-origin: top left;
+    }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: var(--gap) 24px 0;
+    }
+    .hero > * { position: relative; z-index: 1; }
+
+    .logo-lottie {
+      width: min(460px, 82vw);
+      aspect-ratio: 4096 / 2302;
+      margin: 0 auto;
+    }
+    .logo-lottie svg { display: block; }
+
+    /* ---------- View toggle (zero-height overlay in the logo→content gap) ---------- */
+    .view-bar {
+      max-width: calc(1800px + 48px);
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 0;
+      display: flex;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 3;
+    }
+    .vt-btn {
+      width: 40px;
+      height: 28px;
+      position: relative;
+      top: calc(var(--gap) - 30px);
+      background: #fff;
+      border: 2px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    .vt-btn + .vt-btn { border-left: none; }
+    .vt-btn svg { width: 18px; height: 16px; display: block; }
+    .vt-btn svg rect { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+    .vt-btn.active { background: var(--ink); }
+    .vt-btn.active svg rect { stroke: var(--butter); }
+    .vt-btn:hover:not(.active) { background: var(--cream); }
+
+    /* ---------- Live area: video player + chat, bottoms aligned ---------- */
+    .live-wrap {
+      /* the player IS the framed rectangle; chat height matches it exactly */
+      --content: calc(min(100vw, 1848px) - 48px);
+      --vid-w: calc(var(--content) - var(--chat-w) - var(--col-gap));
+      --vid-h: calc(var(--vid-w) * 9 / 16);
+      max-width: calc(1800px + 48px);
+      margin: var(--gap) auto 0;
+      padding: 0 24px 72px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--chat-w);
+      gap: var(--col-gap);
+      align-items: start;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* the frame: strokes stop 18px short of each corner, leaving a gap
+       around the registration crosses (per mockup) */
+    .frame {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        linear-gradient(var(--ink), var(--ink)) top center    / calc(100% - 36px) 1.5px no-repeat,
+        linear-gradient(var(--ink), var(--ink)) bottom center / calc(100% - 36px) 1.5px no-repeat,
+        linear-gradient(var(--ink), var(--ink)) left center   / 1.5px calc(100% - 36px) no-repeat,
+        linear-gradient(var(--ink), var(--ink)) right center  / 1.5px calc(100% - 36px) no-repeat;
+    }
+
+    /* registration crosses centered on the corners, with a white casing */
+    .mark {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      z-index: 3;
+      pointer-events: none;
+      background:
+        linear-gradient(var(--ink), var(--ink)) center / 2px 26px no-repeat,
+        linear-gradient(var(--ink), var(--ink)) center / 26px 2px no-repeat,
+        linear-gradient(#fff, #fff) center / 6px 30px no-repeat,
+        linear-gradient(#fff, #fff) center / 30px 6px no-repeat;
+    }
+    .mark.tl { top: -15px; left: -15px; }
+    .mark.tr { top: -15px; right: -15px; }
+    .mark.bl { bottom: -15px; left: -15px; }
+    .mark.br { bottom: -15px; right: -15px; }
+
+    /* ruler along the player's right side (per mockup: bracketed ends aligned
+       with the player's top/bottom, 11 evenly spaced hash marks between) */
+    .ruler {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: -40px;
+      width: 20px;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        /* main vertical line, right-aligned */
+        linear-gradient(var(--ink), var(--ink)) right center / 1.5px 100% no-repeat,
+        /* 12 even intervals → hash at each boundary; end caps drawn below */
+        repeating-linear-gradient(to bottom, var(--ink) 0 1.5px, transparent 1.5px calc(100% / 12)) right center / 9px 100% no-repeat;
+    }
+    .ruler::before,
+    .ruler::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      width: 20px;
+      height: 1.5px;
+      background: var(--ink);
+    }
+    .ruler::before { top: 0; }
+    .ruler::after { bottom: 0; }
+
+    .player {
+      position: relative;
+      height: var(--vid-h);
+      min-width: 0;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .player .play {
+      width: 92px; height: 92px;
+      border-radius: 50%;
+      background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player:has(iframe) .play { display: none; }
+    .player iframe {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      border: none;
+    }
+    .player .play::after {
+      content: "";
+      border-style: solid;
+      border-width: 17px 0 17px 28px;
+      border-color: transparent transparent transparent #fff;
+      margin-left: 7px;
+    }
+
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      /* box is shorter by the extrusion depth so the extruded bottom face,
+         not the box, lands exactly on the player's bottom edge */
+      height: calc(var(--vid-h) - 15.5px);
+    }
+
+    /* Stacked view: player takes full content width, chat below it */
+    .live-wrap.stacked { grid-template-columns: minmax(0, 1fr); }
+    .live-wrap.stacked .player { height: auto; aspect-ratio: 16 / 9; }
+    .live-wrap.stacked .ruler { display: none; }
+    .live-wrap.stacked .chat-panel { height: 800px; max-height: 90vh; }
+
+    .chat-panel .chat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--ink);
+      color: #fff;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+    }
+    .chat-panel .chat-head .butter-dot {
+      width: 10px; height: 10px;
+      background: var(--butter);
+      border-radius: 50%;
+    }
+    .chat-body {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+    .chat-body .minnit-chat-sembed { display: block; height: 100%; }
+    .chat-fallback {
+      flex: none;
+      background: var(--butter);
+      border-top: 2px solid var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 12px;
+      text-align: center;
+    }
+    .chat-fallback a { color: var(--ink); font-weight: 600; }
+    .chat-body iframe {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      border: none;
+      display: block;
+    }
+
+    /* ---------- Questions panel (SDK demo, hidden for now) ---------- */
+    .qa-panel { grid-column: 1 / -1; }
+    .qa-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--butter);
+      border-bottom: 2.5px solid var(--ink);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+    }
+    .qa-head .sdk-status {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      background: #fff;
+      border: 2px solid var(--ink);
+      padding: 4px 10px;
+    }
+    .qa-composer { display: flex; gap: 0; border-bottom: 2.5px solid var(--ink); }
+    .qa-composer input {
+      flex: 1;
+      font-family: 'Matter', Arial, sans-serif;
+      font-size: 16px;
+      padding: 14px 16px;
+      border: none;
+      outline: none;
+      background: var(--cream);
+      color: var(--ink);
+    }
+    .qa-composer input::placeholder { color: rgba(18,25,38,0.4); }
+    .qa-composer button {
+      font-family: 'Matter', Arial, sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-left: 2.5px solid var(--ink);
+      padding: 0 28px;
+      cursor: pointer;
+    }
+    .qa-list { list-style: none; padding: 8px 0; min-height: 72px; }
+    .qa-list .qa-empty { padding: 20px 16px; color: rgba(18,25,38,0.45); font-size: 15px; }
+    .qa-item {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(18,25,38,0.08);
+      cursor: pointer;
+    }
+    .qa-item:last-child { border-bottom: none; }
+    .qa-item .qa-name { font-weight: 600; white-space: nowrap; }
+    .qa-item .qa-text { flex: 1; }
+    .qa-item .qa-flag {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      border: 2px solid var(--ink);
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+    .qa-item.surfaced { background: #FFF3CC; }
+    .qa-item.surfaced .qa-flag { background: var(--ink); color: var(--butter); }
+
+    footer {
+      border-top: 1px solid rgba(18,25,38,0.08);
+      padding: 24px 40px;
+      font-size: 13px;
+      color: rgba(18,25,38,0.5);
+      text-align: center;
+      background: #fff;
+    }
+
+    /* Short laptop screens: compact the top */
+    @media (min-width: 961px) and (max-height: 800px) {
+      :root { --gap: 16px; }
+      .logo-lottie { width: min(360px, 82vw); }
+    }
+
+    @media (max-width: 960px) {
+      .live-wrap,
+      .live-wrap.stacked {
+        grid-template-columns: 1fr;
+        padding: 0 20px 56px;
+      }
+      .logo-lottie { width: min(320px, 82vw); }
+      .player { height: auto; aspect-ratio: 16 / 9; }
+      .ruler { display: none; }
+      .chat-panel, .live-wrap.stacked .chat-panel { height: auto; min-height: 480px; }
+      .chat-body { min-height: 420px; }
+      .view-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <span class="live-pill"><span class="dot"></span>LIVE NOW</span>
+    <h1>
+      <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">The Spread 2026 Co-create</span>
+      <div class="logo-lottie" id="logo-lottie"></div>
+    </h1>
+  </section>
+
+  <div class="view-bar" role="group" aria-label="Layout">
+    <button class="vt-btn active" data-mode="side" title="Side by side" aria-label="Side-by-side view">
+      <svg viewBox="0 0 18 16"><rect x="1" y="2" width="10" height="12"/><rect x="13" y="2" width="4" height="12"/></svg>
+    </button>
+    <button class="vt-btn" data-mode="stacked" title="Stacked" aria-label="Stacked view">
+      <svg viewBox="0 0 18 16"><rect x="1" y="1.5" width="16" height="8"/><rect x="1" y="11.5" width="16" height="3"/></svg>
+    </button>
+  </div>
+
+  <main class="live-wrap">
+    <div class="player" id="stream-player" title="Live stream player">
+      <span class="frame"></span>
+      <span class="mark tl"></span><span class="mark tr"></span><span class="mark bl"></span><span class="mark br"></span>
+      <div class="ruler"></div>
+      <div class="play"></div>
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/ZdtdTGF2UVY?si=nDwB6Kbw1l5M-rnN&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="origin" allowfullscreen></iframe>
+    </div>
+
+    <aside class="chat-panel dim dim-butter">
+      <div class="chat-head">
+        <span>LIVE CHAT</span>
+        <span style="display:inline-flex; align-items:center; gap:14px;">
+          <a href="https://organizations.minnit.chat/477805246003388/c/Main" target="_blank" rel="noopener"
+             style="color:#fff; opacity:.65; font-size:11px; letter-spacing:.12em; text-decoration:none;">POPOUT&nbsp;&#8599;</a>
+          <span class="butter-dot"></span>
+        </span>
+      </div>
+      <div class="chat-body">
+        <!-- Minnit SDK-enabled embed -->
+        <script src="https://minnit.chat/js/chatsdk.js?c=1772345196" defer></script>
+        <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="chat" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed&sdk&sdkversion=1.1" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+      </div>
+      <div class="chat-fallback" id="chat-fallback" hidden>
+        Trouble with chat? <a href="https://organizations.minnit.chat/477805246003388/c/Main" target="_blank" rel="noopener">Open it in a new window&nbsp;&#8599;</a>
+      </div>
+    </aside>
+
+    <!-- Hidden for now — remove `hidden` to bring the questions panel back -->
+    <section class="qa-panel dim" hidden>
+      <div class="qa-head">
+        <span>🙋 AUDIENCE QUESTIONS <span style="opacity:.5; letter-spacing:.05em; font-weight:500;">(built on the Minnit SDK)</span></span>
+        <span class="sdk-status" id="sdk-status">SDK: connecting…</span>
+      </div>
+      <form class="qa-composer" id="qa-composer">
+        <input type="text" id="qa-input" maxlength="500" placeholder="Have a question for the speakers? Ask it here…">
+        <button type="submit">ASK&nbsp;&nbsp;&#8594;</button>
+      </form>
+      <ul class="qa-list" id="qa-list">
+        <li class="qa-empty" id="qa-empty">No questions yet — questions asked above (or chat messages containing a “?”) appear here automatically. Click one to mark it surfaced.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    // Side-by-side / stacked layout toggle, persisted per visitor
+    document.addEventListener('DOMContentLoaded', () => {
+      const wrap = document.querySelector('.live-wrap');
+      const btns = document.querySelectorAll('.vt-btn');
+      function setMode(mode) {
+        wrap.classList.toggle('stacked', mode === 'stacked');
+        btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        try { localStorage.setItem('spread-view', mode); } catch (e) {}
+      }
+      btns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+      let saved = null;
+      try { saved = localStorage.getItem('spread-view'); } catch (e) {}
+      if (saved === 'stacked') setMode('stacked');
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+  <script>
+    // Render the real Spread wordmark (the site's own Lottie asset, served locally)
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('logo-lottie');
+      if (typeof lottie !== 'undefined' && el) {
+        lottie.loadAnimation({
+          container: el,
+          renderer: 'svg',
+          loop: false,
+          autoplay: true,
+          path: 'spread-logo-lottie.json'
+        });
+      }
+    });
+  </script>
+  <script>
+    let minnit;
+    const seenQuestions = new Set();
+
+    function setStatus(text) {
+      document.getElementById('sdk-status').textContent = text;
+    }
+
+    function addQuestion(m) {
+      if (!m) return;
+      let text = m.message ?? m.msg ?? m.text ?? '';
+      if (typeof text !== 'string') return;
+      const isExplicit = /^Q:\s*/i.test(text);
+      if (!isExplicit && !text.includes('?')) return;
+      if (isExplicit) text = text.replace(/^Q:\s*/i, '');
+      const id = m.message_id || ((m.nickname || m.username || '?') + '|' + text);
+      if (seenQuestions.has(id)) return;
+      seenQuestions.add(id);
+
+      const empty = document.getElementById('qa-empty');
+      if (empty) empty.remove();
+
+      const li = document.createElement('li');
+      li.className = 'qa-item';
+      const name = document.createElement('span');
+      name.className = 'qa-name';
+      name.textContent = m.nickname || m.username || 'Anonymous';
+      const body = document.createElement('span');
+      body.className = 'qa-text';
+      body.textContent = text;
+      const flag = document.createElement('span');
+      flag.className = 'qa-flag';
+      flag.textContent = 'SURFACE';
+      li.append(name, body, flag);
+      li.addEventListener('click', () => {
+        li.classList.toggle('surfaced');
+        flag.textContent = li.classList.contains('surfaced') ? 'SURFACED ✓' : 'SURFACE';
+      });
+      document.getElementById('qa-list').prepend(li);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const iframe = document.getElementById('chat');
+      if (!iframe || typeof MinnitChat === 'undefined') {
+        setStatus('SDK: failed to initialize');
+        return;
+      }
+      minnit = new MinnitChat({ iframe });
+      minnit.connect();
+
+      // If no chat session materializes (e.g. Safari third-party storage failure),
+      // surface the popout fallback instead of leaving a stuck loading state.
+      window.__chatConnected = false;
+      setTimeout(() => {
+        if (!window.__chatConnected) document.getElementById('chat-fallback').hidden = false;
+      }, 8000);
+
+      minnit.on('connected', (d) => {
+        console.log('SDK connected:', d);
+        window.__chatConnected = true;
+        document.getElementById('chat-fallback').hidden = true;
+        setStatus('SDK: connected ●');
+        // Programmatic brand theming baseline (dashboard Custom CSS handles bubbles)
+        minnit.customizeAppearance({
+          theme: 'bright',
+          messagebubblecolor: 'orange',
+          accentcolor: '#121926' /* ink: interface icons/controls black; bubbles are styled by dashboard Custom CSS */
+        });
+      });
+
+      minnit.on('messageHistory', (d) => {
+        console.log('SDK messageHistory:', d);
+        (d.messages || []).forEach(addQuestion);
+      });
+
+      minnit.on('message', (d) => {
+        console.log('SDK message:', d);
+        addQuestion(d.message || d);
+      });
+
+      document.getElementById('qa-composer').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('qa-input');
+        const text = input.value.trim();
+        if (!text) return;
+        minnit.sendMessage({ message: 'Q: ' + text });
+        input.value = '';
+      });
+    });
+  </script>
+
+  <footer>
+    Test harness — replica of givebutter.com/the-spread for chat embed evaluation. Not a production page.
+  </footer>
+</body>
+</html>

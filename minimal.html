@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Chat Embed — Minimal Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { overflow-x: clip; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      overflow-x: hidden;
+    }
+
+    /* ---------- View toggle (functional, unstyled) ---------- */
+    .view-bar {
+      max-width: calc(1280px + 48px);
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 0;
+      display: flex;
+      justify-content: flex-end;
+      position: relative;
+      z-index: 3;
+    }
+    .vt-btn {
+      width: 40px;
+      height: 28px;
+      position: relative;
+      top: calc(var(--gap) - 30px);
+      background: #fff;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    .vt-btn + .vt-btn { border-left: none; }
+    .vt-btn svg { width: 18px; height: 16px; display: block; }
+    .vt-btn svg rect { fill: none; stroke: #888; stroke-width: 1.6; }
+    .vt-btn.active svg rect { stroke: #1a1a1a; }
+    .vt-btn.active { background: #f2f2f2; }
+
+    /* ---------- Live area: same width proportions as the branded page ---------- */
+    :root { --gap: 28px; }
+    .live-wrap {
+      --pw: calc(min(100vw, 1328px) - 48px - 424px); /* content - gutters - chat - gap */
+      --ph: calc(var(--pw) * 9 / 16);
+      max-width: calc(1280px + 48px);
+      margin: var(--gap) auto 0;
+      padding: 0 24px 64px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 400px;
+      gap: 24px;
+      align-items: start;
+    }
+    .player {
+      position: relative;
+      height: var(--ph);
+      min-width: 0;
+      border: 2px solid #1a1a1a;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 14px;
+    }
+    .player iframe {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      border: none;
+    }
+    .player:has(iframe) .placeholder { display: none; }
+
+    .chat-panel {
+      position: relative;
+      height: 800px;
+      max-height: 90vh;
+      border: 2px solid #1a1a1a;
+    }
+    .chat-panel .minnit-chat-sembed { display: block; height: 100%; }
+    .chat-panel iframe {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      border: none;
+      display: block;
+    }
+
+    /* Stacked view */
+    .live-wrap.stacked {
+      --pw: calc(min(100vw, 1328px) - 48px);
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .live-wrap.stacked .chat-panel { height: 800px; max-height: 90vh; }
+
+    .popout-line {
+      max-width: calc(1280px + 48px);
+      margin: 10px auto 0;
+      padding: 0 24px;
+      text-align: right;
+      font-size: 12px;
+    }
+    .popout-line a { color: #666; }
+
+    @media (max-width: 960px) {
+      .live-wrap,
+      .live-wrap.stacked {
+        --pw: calc(100vw - 40px);
+        grid-template-columns: 1fr;
+        padding: 0 20px 56px;
+      }
+      .chat-panel, .live-wrap.stacked .chat-panel { height: auto; min-height: 480px; }
+      .view-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="view-bar" role="group" aria-label="Layout">
+    <button class="vt-btn active" data-mode="side" title="Side by side" aria-label="Side-by-side view">
+      <svg viewBox="0 0 18 16"><rect x="1" y="2" width="10" height="12"/><rect x="13" y="2" width="4" height="12"/></svg>
+    </button>
+    <button class="vt-btn" data-mode="stacked" title="Stacked" aria-label="Stacked view">
+      <svg viewBox="0 0 18 16"><rect x="1" y="1.5" width="16" height="8"/><rect x="1" y="11.5" width="16" height="3"/></svg>
+    </button>
+  </div>
+
+  <main class="live-wrap">
+    <div class="player" id="stream-player" title="Live stream player">
+      <span class="placeholder">Live stream player</span>
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/ZdtdTGF2UVY?si=nDwB6Kbw1l5M-rnN&amp;controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="origin" allowfullscreen></iframe>
+    </div>
+
+    <aside class="chat-panel">
+      <!-- Minnit embed — vendor snippet, verbatim -->
+      <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed" data-style="width:90%; height:800px; max-height:90vh;" data-version="1.55">Chat</span>
+    </aside>
+  </main>
+
+  <p class="popout-line">
+    <a href="https://organizations.minnit.chat/477805246003388/c/Main" target="_blank" rel="noopener">Open chat in a new window ↗</a>
+  </p>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const wrap = document.querySelector('.live-wrap');
+      const btns = document.querySelectorAll('.vt-btn');
+      function setMode(mode) {
+        wrap.classList.toggle('stacked', mode === 'stacked');
+        btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        try { localStorage.setItem('minimal-view', mode); } catch (e) {}
+      }
+      btns.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+      let saved = null;
+      try { saved = localStorage.getItem('minimal-view'); } catch (e) {}
+      if (saved === 'stacked') setMode('stacked');
+    });
+  </script>
+</body>
+</html>
