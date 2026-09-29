@@ -53,9 +53,9 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 360px;
+      grid-template-columns: 1fr 1fr 400px;
       gap: 20px;
-      max-width: 1400px;
+      max-width: 1560px;
       margin: 24px auto;
       padding: 0 24px;
       align-items: start;
@@ -69,6 +69,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       padding: 10px 14px;
       border-bottom: 2.5px solid var(--ink);
       font-size: 13px;
@@ -77,6 +78,7 @@
     }
     .box-head.q { background: var(--butter); }
     .box-head.f { background: var(--cream); }
+    .box-head .controls { display: flex; gap: 6px; align-items: center; }
     .count {
       font-size: 12px;
       background: var(--ink);
@@ -85,7 +87,21 @@
       font-weight: 500;
       letter-spacing: 0.05em;
     }
-    ul { list-style: none; max-height: 72vh; overflow-y: auto; }
+    .slow-btn {
+      font-family: 'Matter', Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      border: 2px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+    .slow-btn:hover { background: var(--butter); }
+    .slow-btn.on { background: var(--orange); color: #fff; }
+
+    ul { list-style: none; max-height: 74vh; overflow-y: auto; }
     .empty { padding: 18px 14px; color: rgba(18,25,38,0.4); font-size: 14px; }
     li.msg {
       padding: 10px 14px;
@@ -96,8 +112,6 @@
     li.msg .name { font-weight: 600; }
     li.msg .time { font-size: 11px; color: rgba(18,25,38,0.4); white-space: nowrap; }
     li.msg .text { margin: 4px 0 8px; word-break: break-word; }
-    li.msg .text img { max-width: 120px; display: block; }
-    li.msg.surfaced { background: #FFF3CC; }
     .actions { display: flex; gap: 6px; flex-wrap: wrap; }
     .actions button {
       font-family: 'Matter', Arial, sans-serif;
@@ -112,23 +126,33 @@
     }
     .actions button:hover { background: var(--cream); }
     .actions button.primary { background: var(--ink); color: var(--butter); }
+    .actions button.primary:disabled { opacity: 0.55; cursor: default; }
     .actions button.danger:hover { background: #FFE1E1; }
 
-    .chat-fill { position: relative; height: 70vh; }
+    .chat-col { display: flex; flex-direction: column; gap: 20px; }
+    .chat-fill { position: relative; height: 42vh; }
+    .chat-fill.short { height: 34vh; }
     .chat-fill .minnit-chat-sembed { display: block; height: 100%; }
     .chat-fill iframe {
       position: absolute;
       inset: 0;
       width: 100% !important;
       height: 100% !important;
+      min-height: 0 !important;
       border: none;
       display: block;
     }
     .note {
-      max-width: 1400px;
+      max-width: 1560px;
       margin: 0 auto 32px;
       padding: 0 24px;
       font-size: 13px;
+      color: rgba(18,25,38,0.55);
+    }
+    .flash {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
       color: rgba(18,25,38,0.55);
     }
   </style>
@@ -141,49 +165,70 @@
 
   <div class="grid">
     <div class="box">
-      <div class="box-head q"><span>🙋 QUESTION QUEUE</span><span class="count" id="q-count">0</span></div>
-      <ul id="q-list"><li class="empty" id="q-empty">Questions from the audience appear here.</li></ul>
+      <div class="box-head f">
+        <span>ALL MESSAGES</span>
+        <span class="controls">
+          <span class="flash" id="slow-flash"></span>
+          <button class="slow-btn" id="slow-on" title="Enable slow mode in the main chat">🐢 SLOW ON</button>
+          <button class="slow-btn" id="slow-off" title="Disable slow mode in the main chat">SLOW OFF</button>
+          <span class="count" id="f-count">0</span>
+        </span>
+      </div>
+      <ul id="f-list"><li class="empty" id="f-empty">Live message feed from the main chat.</li></ul>
     </div>
 
     <div class="box">
-      <div class="box-head f"><span>ALL MESSAGES</span><span class="count" id="f-count">0</span></div>
-      <ul id="f-list"><li class="empty" id="f-empty">Live message feed.</li></ul>
+      <div class="box-head q"><span>⭐ HIGHLIGHTS</span><span class="count" id="h-count">0</span></div>
+      <ul id="h-list"><li class="empty" id="h-empty">Click HIGHLIGHT under a message to add it here.</li></ul>
     </div>
 
-    <div class="box chat-box">
-      <div class="box-head f"><span>CHAT (LOG IN AS MOD HERE)</span></div>
-      <!-- Minnit SDK-enabled embed -->
-      <script src="https://minnit.chat/js/chatsdk.js?c=1772345196" defer></script>
-      <div class="chat-fill">
-        <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modchat" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed&sdk&sdkversion=1.1" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
-        <script>
-          // Mod access: open this page as mod.html?staffkey=YOUR_KEY and the key is
-          // forwarded into the chat embed URL (Minnit Staff Keys, Chat Settings → Staff Keys).
-          // The key is never stored in this page's source. Runs during parse, before the
-          // deferred embed.js reads the span.
-          (function () {
-            const key = new URLSearchParams(location.search).get('staffkey');
-            if (key && /^[A-Za-z0-9_-]{1,128}$/.test(key)) {
-              const span = document.querySelector('.minnit-chat-sembed');
-              span.dataset.chatname += '&staffkey=' + encodeURIComponent(key);
-            }
-          })();
-        </script>
+    <div class="chat-col">
+      <div class="box">
+        <div class="box-head f"><span>MAIN CHAT (LOG IN AS MOD HERE)</span></div>
+        <!-- Minnit SDK-enabled embed — main room -->
+        <script src="https://minnit.chat/js/chatsdk.js?c=1772345196" defer></script>
+        <div class="chat-fill">
+          <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modchat" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed&sdk&sdkversion=1.1" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+        </div>
       </div>
+
+      <div class="box">
+        <div class="box-head q"><span>🔒 MOD CHAT</span></div>
+        <!-- Moderator-only room -->
+        <div class="chat-fill short">
+          <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modsroom" data-chatname="https://organizations.minnit.chat/477805246003388/c/Mods?embed" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+        </div>
+      </div>
+
+      <script>
+        // Mod access: open this page as mod.html?staffkey=YOUR_KEY — the key is
+        // forwarded into BOTH chat embeds (Minnit Staff Keys). It never lives in
+        // this page's source. Runs during parse, before the deferred embed.js.
+        (function () {
+          const key = new URLSearchParams(location.search).get('staffkey');
+          if (key && /^[A-Za-z0-9_-]{1,128}$/.test(key)) {
+            document.querySelectorAll('.minnit-chat-sembed').forEach((span) => {
+              span.dataset.chatname += '&staffkey=' + encodeURIComponent(key);
+            });
+          }
+        })();
+      </script>
     </div>
   </div>
 
   <p class="note">
-    Moderation buttons call the Minnit SDK (deleteMessage / kickUser / banUser). They only take effect when the
-    session logged into the chat panel on the right has <strong>moderator rank or higher</strong> in this Minnit room —
-    otherwise Minnit ignores them server-side. “Surface” is our own layer (highlights here; in production it would
-    push to a stream overlay or the event page).
+    Moderation buttons call the Minnit SDK (deleteMessage / kickUser / banUser), and the slow-mode buttons send
+    the <code>/slowmode</code> chat command as your session. Both only take effect when the session logged into
+    the <strong>main chat</strong> panel has moderator rank or higher — otherwise Minnit ignores them server-side.
+    HIGHLIGHT is our own layer: it copies a message into the Highlights panel on this screen (local to this page
+    for now; in production it would broadcast to a stream overlay or the event page).
   </p>
 
   <script>
     let minnit;
     const seen = new Set();
-    let qCount = 0, fCount = 0;
+    const highlighted = new Set();
+    let fCount = 0, hCount = 0;
 
     function esc(el, text) { el.textContent = text; return el; }
 
@@ -193,31 +238,58 @@
       return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     }
 
-    function makeItem(m, isQuestion) {
-      const li = document.createElement('li');
-      li.className = 'msg';
+    function msgTop(m) {
       const top = document.createElement('div');
       top.className = 'top';
       top.append(
         esc(Object.assign(document.createElement('span'), { className: 'name' }), m.nickname || m.username || 'Anonymous'),
         esc(Object.assign(document.createElement('span'), { className: 'time' }), fmtTime(m.timestamp))
       );
+      return top;
+    }
+
+    function msgText(m) {
       const text = Object.assign(document.createElement('div'), { className: 'text' });
-      let body = m.message ?? m.msg ?? m.text ?? '';
-      esc(text, isQuestion ? body.replace(/^Q:\s*/i, '') : body);
+      esc(text, m.message ?? m.msg ?? m.text ?? '');
+      return text;
+    }
+
+    function addHighlight(m, sourceBtn) {
+      if (!m.message_id || highlighted.has(m.message_id)) return;
+      highlighted.add(m.message_id);
+
+      const empty = document.getElementById('h-empty');
+      if (empty) empty.remove();
+
+      const li = document.createElement('li');
+      li.className = 'msg';
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const remove = esc(document.createElement('button'), 'REMOVE');
+      remove.addEventListener('click', () => {
+        li.remove();
+        highlighted.delete(m.message_id);
+        document.getElementById('h-count').textContent = --hCount;
+        if (sourceBtn) { sourceBtn.disabled = false; sourceBtn.textContent = '⭐ HIGHLIGHT'; }
+      });
+      actions.append(remove);
+      li.append(msgTop(m), msgText(m), actions);
+      document.getElementById('h-list').prepend(li);
+      document.getElementById('h-count').textContent = ++hCount;
+
+      if (sourceBtn) { sourceBtn.disabled = true; sourceBtn.textContent = 'HIGHLIGHTED ✓'; }
+    }
+
+    function makeFeedItem(m) {
+      const li = document.createElement('li');
+      li.className = 'msg';
 
       const actions = document.createElement('div');
       actions.className = 'actions';
 
-      if (isQuestion) {
-        const surface = esc(document.createElement('button'), 'SURFACE');
-        surface.className = 'primary';
-        surface.addEventListener('click', () => {
-          li.classList.toggle('surfaced');
-          surface.textContent = li.classList.contains('surfaced') ? 'SURFACED ✓' : 'SURFACE';
-        });
-        actions.append(surface);
-      }
+      const hl = esc(document.createElement('button'), '⭐ HIGHLIGHT');
+      hl.className = 'primary';
+      hl.addEventListener('click', () => addHighlight(m, hl));
 
       const del = esc(document.createElement('button'), 'DELETE');
       del.className = 'danger';
@@ -242,8 +314,8 @@
         }
       });
 
-      actions.append(del, kick, ban);
-      li.append(top, text, actions);
+      actions.append(hl, del, kick, ban);
+      li.append(msgTop(m), msgText(m), actions);
       return li;
     }
 
@@ -255,16 +327,14 @@
 
       const fEmpty = document.getElementById('f-empty');
       if (fEmpty) fEmpty.remove();
-      document.getElementById('f-list').prepend(makeItem(m, false));
+      document.getElementById('f-list').prepend(makeFeedItem(m));
       document.getElementById('f-count').textContent = ++fCount;
+    }
 
-      const isQuestion = /^Q:\s*/i.test(body) || body.includes('?');
-      if (isQuestion) {
-        const qEmpty = document.getElementById('q-empty');
-        if (qEmpty) qEmpty.remove();
-        document.getElementById('q-list').prepend(makeItem(m, true));
-        document.getElementById('q-count').textContent = ++qCount;
-      }
+    function flash(text) {
+      const el = document.getElementById('slow-flash');
+      el.textContent = text;
+      setTimeout(() => { if (el.textContent === text) el.textContent = ''; }, 4000);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -289,6 +359,21 @@
 
       minnit.on('messageHistory', (d) => (d.messages || []).forEach(addMessage));
       minnit.on('message', (d) => addMessage(d.message || d));
+
+      // Slow mode: sent as the /slowmode chat command from this session
+      // (mod rank required — Minnit ignores it otherwise)
+      document.getElementById('slow-on').addEventListener('click', () => {
+        minnit.sendMessage({ message: '/slowmode' });
+        document.getElementById('slow-on').classList.add('on');
+        document.getElementById('slow-off').classList.remove('on');
+        flash('sent /slowmode');
+      });
+      document.getElementById('slow-off').addEventListener('click', () => {
+        minnit.sendMessage({ message: '/slowmode off' });
+        document.getElementById('slow-on').classList.remove('on');
+        document.getElementById('slow-off').classList.add('on');
+        flash('sent /slowmode off');
+      });
     });
   </script>
 </body>
