@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Spread — Highlights (Presenter View)</title>
+  <style>
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 400;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f58724915f95c9f19446ce_Matter-Regular.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 500;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f587242130ef3148ea1960_Matter-Medium.ttf') format('truetype');
+    }
+    @font-face {
+      font-family: 'Matter';
+      font-weight: 600;
+      src: url('https://cdn.prod.website-files.com/612f5131b9c94ecd0fe9c722/62f587240b37191d663564ad_Matter-SemiBold.ttf') format('truetype');
+    }
+
+    :root {
+      --ink: #121926;
+      --orange: #FF6200;
+      --butter: #FFC629;
+      --cream: #FFFDF7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Matter', Arial, sans-serif;
+      color: var(--ink);
+      background: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--ink);
+      color: #fff;
+      padding: 16px 28px;
+      flex: none;
+    }
+    header h1 { font-size: 18px; font-weight: 500; letter-spacing: 0.18em; }
+    .status {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      background: var(--butter);
+      color: var(--ink);
+      padding: 6px 14px;
+    }
+    .status.live { background: #2ECC71; }
+
+    .cards {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+      padding: 28px;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .empty {
+      padding: 60px 20px;
+      text-align: center;
+      color: rgba(18,25,38,0.4);
+      font-size: 24px;
+    }
+    .card {
+      background: #fff;
+      border: 2px solid var(--ink);
+      padding: 26px 30px;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      box-sizing: border-box;
+      top: calc(100% + 2px);
+      left: -2px;
+      right: -2px;
+      height: 12px;
+      background: var(--butter);
+      border: 1.5px solid var(--ink);
+      border-top: none;
+      transform: skewX(45deg);
+      transform-origin: top left;
+    }
+    .card .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .card .who { font-size: 20px; font-weight: 600; }
+    .card .when { font-size: 13px; color: rgba(18,25,38,0.45); white-space: nowrap; }
+    .card .what { font-size: 30px; line-height: 1.35; word-break: break-word; }
+    .card .done {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-family: 'Matter', Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      border: 2px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      padding: 4px 12px;
+      cursor: pointer;
+      opacity: 0.35;
+    }
+    .card:hover .done { opacity: 1; }
+    .card .done:hover { background: var(--butter); }
+
+    .connect {
+      flex: none;
+      border-top: 2px solid var(--ink);
+      background: #fff;
+    }
+    .connect summary {
+      cursor: pointer;
+      padding: 10px 28px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      background: var(--butter);
+      list-style: none;
+    }
+    .connect summary::-webkit-details-marker { display: none; }
+    .chat-fill { position: relative; height: 320px; }
+    .chat-fill .minnit-chat-sembed { display: block; height: 100%; }
+    .chat-fill iframe {
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⭐ HIGHLIGHTS</h1>
+    <span class="status" id="status">join the mod room below to connect</span>
+  </header>
+
+  <ul class="cards" id="cards">
+    <li class="empty" id="empty">Waiting for highlights from the mod team…</li>
+  </ul>
+
+  <details class="connect" open>
+    <summary>▸ CONNECTION — join the mod room here, then you can collapse this</summary>
+    <!-- Hidden transport: highlights arrive as ⭐ messages in the mod-only room -->
+    <script src="https://minnit.chat/js/chatsdk.js?c=1772345196" defer></script>
+    <div class="chat-fill">
+      <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modsroom" data-chatname="https://organizations.minnit.chat/477805246003388/c/Mods?embed&sdk&sdkversion=1.1" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+    </div>
+    <script>
+      // Access: open as claudia.html?staffkey=YOUR_KEY — forwarded into the embed.
+      (function () {
+        const key = new URLSearchParams(location.search).get('staffkey');
+        if (key && /^[A-Za-z0-9_-]{1,128}$/.test(key)) {
+          document.querySelectorAll('.minnit-chat-sembed').forEach((span) => {
+            span.dataset.chatname += '&staffkey=' + encodeURIComponent(key);
+          });
+        }
+      })();
+    </script>
+  </details>
+
+  <script>
+    const seen = new Set();
+    let cardCount = 0;
+
+    function fmtTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts * 1000);
+      return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function addCard(m) {
+      if (!m || !m.message_id || seen.has(m.message_id)) return;
+      const raw = m.message ?? m.msg ?? m.text ?? '';
+      if (typeof raw !== 'string' || !raw.startsWith('⭐')) return; // only highlight broadcasts
+      seen.add(m.message_id);
+
+      // format: "⭐ Name — message text" (falls back to showing the whole thing)
+      const stripped = raw.replace(/^⭐\s*/, '');
+      const sep = stripped.indexOf(' — ');
+      const who = sep > 0 ? stripped.slice(0, sep) : (m.nickname || 'Highlight');
+      const what = sep > 0 ? stripped.slice(sep + 3) : stripped;
+
+      const empty = document.getElementById('empty');
+      if (empty) empty.remove();
+
+      const li = document.createElement('li');
+      li.className = 'card';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const whoEl = document.createElement('span');
+      whoEl.className = 'who';
+      whoEl.textContent = who;
+      const whenEl = document.createElement('span');
+      whenEl.className = 'when';
+      whenEl.textContent = fmtTime(m.timestamp);
+      meta.append(whoEl, whenEl);
+
+      const whatEl = document.createElement('div');
+      whatEl.className = 'what';
+      whatEl.textContent = what;
+
+      const done = document.createElement('button');
+      done.className = 'done';
+      done.textContent = 'DONE';
+      done.addEventListener('click', () => li.remove());
+
+      li.append(done, meta, whatEl);
+      document.getElementById('cards').prepend(li);
+      cardCount++;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const iframe = document.getElementById('modsroom');
+      const status = document.getElementById('status');
+      if (!iframe || typeof MinnitChat === 'undefined') {
+        status.textContent = 'SDK failed to initialize';
+        return;
+      }
+      const minnit = new MinnitChat({ iframe });
+      minnit.connect();
+
+      minnit.on('connected', (d) => {
+        status.textContent = 'LIVE — connected as ' + (d.nickname || d.username || 'guest');
+        status.classList.add('live');
+        // collapse the connection panel once we're receiving
+        const panel = document.querySelector('.connect');
+        if (panel) panel.open = false;
+      });
+
+      minnit.on('messageHistory', (d) => (d.messages || []).forEach(addCard));
+      minnit.on('message', (d) => addCard(d.message || d));
+    });
+  </script>
+</body>
+</html>

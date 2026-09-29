@@ -188,7 +188,7 @@
         <!-- Minnit SDK-enabled embed — main room -->
         <script src="https://minnit.chat/js/chatsdk.js?c=1772345196" defer></script>
         <div class="chat-fill">
-          <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modchat" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed&sdk&sdkversion=1.1" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+          <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modchat" data-chatname="https://organizations.minnit.chat/477805246003388/c/Main?embed&sdk&sdkversion=1.1&sdkidentifier=main" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
         </div>
       </div>
 
@@ -196,7 +196,7 @@
         <div class="box-head q"><span>🔒 MOD CHAT</span></div>
         <!-- Moderator-only room -->
         <div class="chat-fill short">
-          <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modsroom" data-chatname="https://organizations.minnit.chat/477805246003388/c/Mods?embed" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
+          <script src="https://minnit.chat/js/embed.js?c=1772345192" defer></script><span style="display: none;" class="minnit-chat-sembed" data-iframeid="modsroom" data-chatname="https://organizations.minnit.chat/477805246003388/c/Mods?embed&sdk&sdkversion=1.1&sdkidentifier=mods" data-style="width:100%; height:100%;" data-version="1.55">Chat</span>
         </div>
       </div>
 
@@ -220,12 +220,14 @@
     Moderation buttons call the Minnit SDK (deleteMessage / kickUser / banUser), and the slow-mode buttons send
     the <code>/slowmode</code> chat command as your session. Both only take effect when the session logged into
     the <strong>main chat</strong> panel has moderator rank or higher — otherwise Minnit ignores them server-side.
-    HIGHLIGHT is our own layer: it copies a message into the Highlights panel on this screen (local to this page
-    for now; in production it would broadcast to a stream overlay or the event page).
+    HIGHLIGHT copies a message into the Highlights panel here AND broadcasts it (as a ⭐-prefixed message in the
+    mod room) to <a href="claudia.html">claudia.html</a>, the presenter view. For the broadcast to send, this
+    browser must be joined in the MOD CHAT panel.
   </p>
 
   <script>
-    let minnit;
+    let minnit;      // main room (feed, moderation, /slowmode)
+    let minnitMods;  // mod-only room (highlight broadcast to claudia.html)
     const seen = new Set();
     const highlighted = new Set();
     let fCount = 0, hCount = 0;
@@ -278,6 +280,16 @@
       document.getElementById('h-count').textContent = ++hCount;
 
       if (sourceBtn) { sourceBtn.disabled = true; sourceBtn.textContent = 'HIGHLIGHTED ✓'; }
+
+      // Broadcast to the mod room so claudia.html (presenter view) picks it up.
+      // Requires this browser to be joined in the MOD CHAT panel below.
+      try {
+        if (minnitMods) {
+          const who = m.nickname || m.username || 'Anonymous';
+          const body = (m.message ?? m.msg ?? m.text ?? '').slice(0, 400);
+          minnitMods.sendMessage({ message: '⭐ ' + who + ' — ' + body });
+        }
+      } catch (e) { console.log('highlight broadcast failed:', e); }
     }
 
     function makeFeedItem(m) {
@@ -344,8 +356,14 @@
         who.textContent = 'SDK failed to initialize';
         return;
       }
-      minnit = new MinnitChat({ iframe });
+      minnit = new MinnitChat({ iframe, sdkidentifier: 'main' });
       minnit.connect();
+
+      const modsIframe = document.getElementById('modsroom');
+      if (modsIframe) {
+        minnitMods = new MinnitChat({ iframe: modsIframe, sdkidentifier: 'mods' });
+        minnitMods.connect();
+      }
 
       minnit.on('connected', (d) => {
         console.log('MOD SDK connected:', d);
